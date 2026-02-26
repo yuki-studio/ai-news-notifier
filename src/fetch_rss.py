@@ -1,0 +1,74 @@
+import feedparser
+from datetime import datetime
+import time
+from src.utils import setup_logger
+from src.config import RSS_FEEDS
+
+logger = setup_logger("rss_fetcher")
+
+def parse_date(date_str):
+    """
+    Parse date string from RSS feed into a datetime object.
+    """
+    try:
+        # feedparser usually parses the date into a struct_time in 'published_parsed'
+        # We handle this in the fetch_rss function, but this is a fallback or utility if needed.
+        pass
+    except Exception as e:
+        logger.warning(f"Failed to parse date: {date_str}, error: {e}")
+    return None
+
+def fetch_rss_feeds():
+    """
+    Fetches news items from all configured RSS feeds.
+    Returns a list of dictionaries containing news item details.
+    """
+    all_news = []
+    
+    for feed_url in RSS_FEEDS:
+        feed_url = feed_url.strip()
+        if not feed_url:
+            continue
+            
+        logger.info(f"Fetching RSS feed: {feed_url}")
+        try:
+            feed = feedparser.parse(feed_url)
+            
+            if feed.bozo:
+                logger.warning(f"Error parsing feed {feed_url}: {feed.bozo_exception}")
+                # Continue anyway as feedparser often parses partially broken feeds
+            
+            for entry in feed.entries:
+                # Extract publish time
+                published_parsed = entry.get("published_parsed") or entry.get("updated_parsed")
+                if published_parsed:
+                    publish_time = datetime.fromtimestamp(time.mktime(published_parsed))
+                else:
+                    # If no date, use current time (fallback as per PRD)
+                    publish_time = datetime.now()
+                
+                news_item = {
+                    "title": entry.get("title", ""),
+                    "link": entry.get("link", ""),
+                    "source": feed.feed.get("title", feed_url),
+                    "publish_time": publish_time,
+                    "summary": entry.get("summary", "") or entry.get("description", ""),
+                    "content": entry.get("content", [{"value": ""}])[0]["value"] if "content" in entry else ""
+                }
+                
+                all_news.append(news_item)
+                
+            logger.info(f"Fetched {len(feed.entries)} items from {feed_url}")
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch feed {feed_url}: {e}")
+            
+    logger.info(f"Total news items fetched: {len(all_news)}")
+    return all_news
+
+if __name__ == "__main__":
+    # Test the fetcher
+    news = fetch_rss_feeds()
+    print(f"Fetched {len(news)} items.")
+    if news:
+        print("Sample item:", news[0])
