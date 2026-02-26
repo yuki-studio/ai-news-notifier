@@ -1,4 +1,5 @@
 import sys
+from src.config import AI_API_KEY, AI_PROVIDER, AI_MODEL, AI_BASE_URL, FEISHU_WEBHOOK
 from src.utils import setup_logger
 from src.fetch_rss import fetch_rss_feeds
 from src.freshness_filter import filter_fresh_news
@@ -14,6 +15,11 @@ logger = setup_logger("main")
 def main():
     logger.info("Starting AI News Notifier Pipeline")
     
+    # Log configuration (masking sensitive data)
+    masked_key = f"{AI_API_KEY[:4]}...{AI_API_KEY[-4:]}" if AI_API_KEY and len(AI_API_KEY) > 8 else "NOT_SET"
+    logger.info(f"Configuration: Provider={AI_PROVIDER}, Model={AI_MODEL}, BaseURL={AI_BASE_URL}, API_KEY={masked_key}")
+    logger.info(f"Feishu Webhook set: {'Yes' if FEISHU_WEBHOOK else 'No'}")
+
     # 1. Fetch
     news = fetch_rss_feeds()
     if not news:

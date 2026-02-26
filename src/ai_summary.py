@@ -55,6 +55,9 @@ def get_ai_score(news_item):
         return 50
     except Exception as e:
         logger.error(f"Error getting AI score: {e}")
+        # Log response body if available for debugging
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+             logger.error(f"API Response: {e.response.text}")
         return 50
 
 def generate_summary(news_item):
@@ -114,6 +117,8 @@ def generate_summary(news_item):
         return json.loads(content)
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+             logger.error(f"API Response: {e.response.text}")
         return {
             "title": title,
             "summary": "Failed to generate summary.",

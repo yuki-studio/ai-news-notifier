@@ -27,22 +27,22 @@ else:
     RSS_FEEDS = RSS_FEEDS.split(",")
 
 # Filter Settings
-FRESHNESS_HOURS = int(os.getenv("FRESHNESS_HOURS", "48"))
+FRESHNESS_HOURS = int(os.getenv("FRESHNESS_HOURS", "48").strip() or "48")
 
 # Deduplication Settings
-SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.8"))
+SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.8").strip() or "0.8")
 
 # Scoring Settings
-AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").lower() # openai or deepseek
-AI_API_KEY = os.getenv("AI_API_KEY")
-AI_BASE_URL = os.getenv("AI_BASE_URL")
-AI_MODEL = os.getenv("AI_MODEL", "gpt-4o") # or deepseek-chat
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").strip().strip('"').strip("'").lower() # openai or deepseek
+AI_API_KEY = os.getenv("AI_API_KEY", "").strip().strip('"').strip("'")
+AI_BASE_URL = os.getenv("AI_BASE_URL", "").strip().strip('"').strip("'")
+AI_MODEL = os.getenv("AI_MODEL", "gpt-4o").strip().strip('"').strip("'") # or deepseek-chat
 
 # Ranking Settings
-TOP_N = int(os.getenv("TOP_N", "5"))
+TOP_N = int(os.getenv("TOP_N", "5").strip() or "5")
 
 # Feishu Settings
-FEISHU_WEBHOOK = os.getenv("FEISHU_WEBHOOK")
+FEISHU_WEBHOOK = os.getenv("FEISHU_WEBHOOK", "").strip().strip('"').strip("'")
 
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
