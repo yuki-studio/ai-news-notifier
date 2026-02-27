@@ -102,9 +102,18 @@ def send_to_feishu(summaries):
             data=json.dumps(card)
         )
         response.raise_for_status()
-        logger.info("Successfully sent to Feishu")
+        
+        # Check for Feishu specific error codes in body even if HTTP 200
+        res_json = response.json()
+        if res_json.get("code") and res_json.get("code") != 0:
+            logger.error(f"Feishu API Error: {res_json}")
+        else:
+            logger.info("Successfully sent to Feishu")
+            
     except Exception as e:
         logger.error(f"Failed to send to Feishu: {e}")
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+             logger.error(f"Feishu Response: {e.response.text}")
 
 if __name__ == "__main__":
     # Test

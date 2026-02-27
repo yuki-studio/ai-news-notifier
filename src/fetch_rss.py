@@ -1,10 +1,17 @@
 import feedparser
+import requests
 from datetime import datetime
 import time
 from src.utils import setup_logger
 from src.config import RSS_FEEDS
 
 logger = setup_logger("rss_fetcher")
+
+# Browser-like User-Agent to avoid blocking
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/rss+xml, application/xml, application/atom+xml, text/xml, */*"
+}
 
 def parse_date(date_str):
     """
@@ -32,7 +39,10 @@ def fetch_rss_feeds():
             
         logger.info(f"Fetching RSS feed: {feed_url}")
         try:
-            feed = feedparser.parse(feed_url)
+            # Use requests to fetch with headers, then parse with feedparser
+            response = requests.get(feed_url, headers=HEADERS, timeout=30)
+            response.raise_for_status()
+            feed = feedparser.parse(response.content)
             
             if feed.bozo:
                 logger.warning(f"Error parsing feed {feed_url}: {feed.bozo_exception}")
