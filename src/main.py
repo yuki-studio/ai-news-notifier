@@ -62,9 +62,15 @@ def main():
             final_item = {
                 **summary_data,
                 "links": item.get("links", []),
-                "sources": item.get("sources", []),
+                "original_sources": item.get("sources", []), # rename to avoid conflict if summary has source_name
                 "original_title": item.get("title")
             }
+            # Fallback for source_name and url if AI failed to extract them
+            if not final_item.get("url") and final_item.get("links"):
+                 final_item["url"] = final_item["links"][0]
+            if not final_item.get("source_name") and final_item.get("original_sources"):
+                 final_item["source_name"] = final_item["original_sources"][0]
+
             summarized_news.append(final_item)
         except Exception as e:
             logger.error(f"Error processing summary for item '{item.get('title')}': {e}")

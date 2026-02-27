@@ -3,6 +3,8 @@ import json
 from src.config import FEISHU_WEBHOOK
 from src.utils import setup_logger
 
+from datetime import datetime
+
 logger = setup_logger("feishu_sender")
 
 def send_to_feishu(summaries):
@@ -15,78 +17,53 @@ def send_to_feishu(summaries):
 
     logger.info(f"Sending {len(summaries)} items to Feishu")
     
-    # Construct Feishu Card
-    # We can send one card with multiple elements, or multiple messages.
-    # A single card is cleaner.
-    
-    elements = []
-    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
     # Header
     card_header = {
         "title": {
             "tag": "plain_text",
-            "content": "🤖 AI 每日精选资讯"
+            "content": f"🤖 AI行业快讯 | {current_date}"
         },
         "template": "blue"
     }
+    
+    elements = []
     
     for i, item in enumerate(summaries):
         # Separator for items after the first one
         if i > 0:
             elements.append({"tag": "hr"})
             
-        # Title
+        # Title with Emoji number
+        emoji_num = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"][i] if i < 5 else f"{i+1}."
+        
+        # Ensure we have a valid URL. 
+        # Priority: URL from AI summary -> URL from original item -> '#'
+        url = item.get('url')
+        if not url or url == "":
+            links = item.get('links', [])
+            if links:
+                url = links[0]
+            else:
+                url = "#"
+
+        source_name = item.get('source_name', 'Unknown Source')
+
+        # Combined Text Block
+        # 1. Title
+        # 2. Summary
+        # 3. Source Link
+        content = f"**{emoji_num} {item['title']}**\n\n{item['summary']}\n\n来源：[{source_name}]({url})"
+
         elements.append({
             "tag": "div",
             "text": {
                 "tag": "lark_md",
-                "content": f"**[{item['title']}]({item.get('links', ['#'])[0]})**" 
-                # Note: 'links' might not be in the summary object if it came purely from generate_summary.
-                # We need to make sure we pass the original link or include it in summary object.
-                # In main.py, we should merge the original link into the summary object or pass it.
+                "content": content
             }
         })
-        
-        # Summary
-        elements.append({
-            "tag": "div",
-            "text": {
-                "tag": "lark_md",
-                "content": f"📖 **摘要**: {item['summary']}"
-            }
-        })
-        
-        # Key Points
-        if item.get('key_points'):
-            points = "\n".join([f"- {p}" for p in item['key_points']])
-            elements.append({
-                "tag": "div",
-                "text": {
-                    "tag": "lark_md",
-                    "content": f"💡 **核心能力**:\n{points}"
-                }
-            })
-            
-        # Impact
-        if item.get('impact'):
-            elements.append({
-                "tag": "div",
-                "text": {
-                    "tag": "lark_md",
-                    "content": f"🚀 **影响**: {item['impact']}"
-                }
-            })
-            
-        # Footer/Sources
-        sources_text = item.get('publish_date', '')
-        if item.get('sources'):
-             # Handle if sources is list or string (generate_summary might return list in prompt but string in practice, let's check)
-             # In generate_summary prompt I asked for JSON but didn't strictly specify source list in output JSON, 
-             # but I did ask for "Sources" in input.
-             # Actually the output JSON format in prompt doesn't have "sources" field. 
-             # I should probably add it or rely on the input context.
-             pass
-             
+
     card = {
         "msg_type": "interactive",
         "card": {

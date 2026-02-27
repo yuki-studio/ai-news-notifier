@@ -79,28 +79,41 @@ def generate_summary(news_item):
     sources = ", ".join(news_item.get("sources", []))
     
     prompt = f"""
-    Analyze the following AI news and generate a structured summary JSON.
+    你是AI行业分析师。
     
-    Input News:
+    总结以下AI新闻。
+    
+    输入新闻:
     Title: {title}
     Sources: {sources}
     Content Summaries: {summaries}
-    
-    Requirements:
-    1. title: <= 30 words, translated to Chinese if input is English.
-    2. summary: 40-60 words, describing company, product, update content. Translated to Chinese.
-    3. key_points: 2-3 bullet points, list of capabilities or features. Translated to Chinese.
-    4. impact: 30-50 words, describing industry significance. Translated to Chinese.
-    5. publish_date: YYYY-MM-DD format.
-    
-    Output JSON format:
+
+    输出JSON:
     {{
-        "title": "...",
-        "summary": "...",
-        "key_points": ["...", "..."],
-        "impact": "...",
-        "publish_date": "YYYY-MM-DD"
+        "title":"",
+        "summary":"",
+        "source_name":"",
+        "url":""
     }}
+    
+    要求:
+    
+    1. title: <= 30字，必须包含公司名和产品名/技术名。
+    
+    2. summary: 
+       - 80-120字。
+       - 最多3行展示完毕。
+       - 必须是一段文字，不能换行。
+       - 必须说明：哪家公司、发布什么、新能力、应用价值。
+    
+    3. source_name: 来源名称（如 OpenAI Blog, TechCrunch）。
+    
+    4. url: 原文链接。
+    
+    规则:
+    - 必须具体，避免空话。
+    - 避免营销语言。
+    - 必须使用中文。
     """
     
     try:
@@ -122,7 +135,6 @@ def generate_summary(news_item):
         return {
             "title": title,
             "summary": "Failed to generate summary.",
-            "key_points": [],
-            "impact": "Error",
-            "publish_date": str(datetime.now().date())
+            "source_name": "Unknown",
+            "url": ""
         }
